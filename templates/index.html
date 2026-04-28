@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Gerador π</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;background:#0a0a0a;color:#e0e0e0;padding:20px}
+h1{text-align:center;color:#00ff88;margin-bottom:30px;font-size:2em}h2{color:#00ccff;margin-bottom:15px;font-size:1.3em;border-bottom:1px solid #333;padding-bottom:8px}h3{color:#ff9900;margin-bottom:10px;font-size:1.1em}
+.container{max-width:1400px;margin:0 auto}.painel{background:#141414;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:20px}
+.painel-destaque{border-color:#00ff88}.painel-freq{border-color:#ff9900}.painel-hibrido{border-color:#ff00ff}.painel-seed{border-color:#00ccff}.painel-chars{border-color:#00ffcc}.painel-filtro{border-color:#ffff00;box-shadow:0 4px 15px rgba(255,255,0,.1)}
+.grid-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:15px}
+.campo{display:flex;flex-direction:column;gap:5px}.campo-wide{grid-column:span 2}
+label{color:#888;font-size:.85em;text-transform:uppercase}
+input[type="text"],input[type="number"]{background:#1e1e1e;border:1px solid #3a3a3a;border-radius:6px;color:#fff;padding:10px 12px;font-family:'Courier New',monospace;font-size:1em}input:focus{outline:none;border-color:#00ff88}
+.resultado-box{background:#0d0d0d;border:1px solid #2a2a2a;border-radius:8px;padding:15px;margin-top:10px;max-height:200px;overflow-y:auto;word-break:break-all;font-size:1.1em;line-height:2;color:#00ff88;white-space:pre-wrap;letter-spacing:1px}
+.info-bar{display:flex;justify-content:space-between;margin-top:10px;padding:8px 12px;background:#1a1a1a;border-radius:6px;font-size:.85em;color:#888;flex-wrap:wrap;gap:10px}.info-bar span{color:#00ccff}
+.palavras-lista{margin-top:10px;padding:10px;background:#1a1a1a;border-radius:6px;max-height:100px;overflow-y:auto;font-size:.85em}
+.tag{display:inline-block;background:#002211;border:1px solid #00ff88;color:#00ff88;padding:2px 8px;border-radius:4px;margin:2px;font-size:.85em}
+.match-container{display:flex;flex-wrap:wrap;gap:1px}.match-char{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:20px;border-radius:2px;padding:0 2px;font-size:.7em;font-weight:bold;border:1px solid}
+.match-found{background:#002211;border-color:#00ff88;color:#00ff88}.match-missing{background:#220000;border-color:#ff3333;color:#ff3333;opacity:.5}
+button{padding:10px 24px;border:none;border-radius:6px;font-family:'Courier New',monospace;font-size:1em;cursor:pointer;font-weight:bold;text-transform:uppercase}
+.btn-freq{background:#ff9900;color:#000}.btn-hibrido{background:#ff00ff;color:#000}.btn-buscar{background:#00ccff;color:#000}.btn-chars{background:#00ffcc;color:#000}.btn-filtro{background:#ffff00;color:#000}.btn-parar{background:#ff3333;color:#fff}
+.btn-group{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.status-indicator{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}.status-ativo{background:#00ff88;animation:pulse 1s infinite}.status-inativo{background:#555}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.loading-indicator{display:inline-block;width:12px;height:12px;border:2px solid #333;border-top:2px solid #00ff88;border-radius:50%;animation:spin .6s linear infinite;margin-left:10px;opacity:0}.loading-indicator.visible{opacity:1}@keyframes spin{to{transform:rotate(360deg)}}
+.stats-row{display:flex;gap:20px;flex-wrap:wrap;margin-top:10px;padding:10px;background:#1a1a1a;border-radius:6px;align-items:center}
+.stat-item{display:flex;flex-direction:column;align-items:center;min-width:80px}.stat-value{font-size:1.3em;font-weight:bold;color:#00ff88}.stat-label{font-size:.7em;color:#666;text-transform:uppercase;margin-top:2px}
+table{width:100%;border-collapse:collapse;margin-top:10px}th{background:#1e1e1e;color:#00ccff;padding:10px;text-align:left;font-size:.8em;text-transform:uppercase;border-bottom:2px solid #333}td{padding:8px 10px;border-bottom:1px solid #222;font-size:.85em;vertical-align:top}tr:hover{background:#1a1a1a}
+.seed-cell{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ff9900;cursor:pointer}.seed-cell:hover{white-space:normal;word-break:break-all}
+.freq-cell{color:#ff00ff;font-weight:bold}.texto-cell{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#00ff88;cursor:pointer}.texto-cell:hover{white-space:normal;word-break:break-all}
+.score-cell{color:#ffff00;font-weight:bold;font-size:1.1em}.cobertura-cell{color:#00ffcc;font-weight:bold}.seedlen-cell{color:#aaa;font-size:.8em}
+.pos-hot{color:#ff3333;font-weight:bold}.pos-warm{color:#ff9900;font-weight:bold}.pos-cool{color:#00ccff;font-weight:bold}.pos-far{color:#666}
+.separador{border:none;border-top:1px solid #2a2a2a;margin:30px 0}
+.tabs{display:flex;gap:5px;margin-bottom:0;flex-wrap:wrap}.tab{padding:10px 20px;background:#1e1e1e;border:1px solid #333;border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;color:#888;font-family:'Courier New',monospace;font-size:.9em}
+.tab.active{background:#141414;border-bottom:1px solid #141414}.tab-freq.active{color:#ff9900;border-color:#ff9900}.tab-hibrido.active{color:#ff00ff;border-color:#ff00ff}.tab-seed.active{color:#00ccff;border-color:#00ccff}.tab-chars.active{color:#00ffcc;border-color:#00ffcc}
+.tab-content{display:none}.tab-content.active{display:block}
+.score-highlight{background:linear-gradient(135deg,rgba(255,255,0,.1),rgba(255,153,0,.1));border:1px solid rgba(255,255,0,.3);border-radius:8px;padding:3px 10px}
+.rank-medal{font-size:1.2em;margin-right:4px}.mini-bar-bg{display:inline-block;width:50px;height:6px;background:#333;border-radius:3px;vertical-align:middle;margin-right:4px}.mini-bar-fill{display:block;height:100%;border-radius:3px}.fill-green{background:#00ff88}.fill-orange{background:#ff9900}.fill-yellow{background:#ffff00}
+.ordem-code{font-family:'Courier New',monospace;background:#1a1a00;border:1px solid #ffff00;color:#ffff00;padding:3px 8px;border-radius:4px;font-size:.9em;cursor:pointer;letter-spacing:2px}
+.match-badge{display:inline-block;padding:3px 10px;border-radius:15px;font-size:.8em;font-weight:bold;background:rgba(0,255,136,.2);border:2px solid #00ff88;color:#00ff88;animation:mg 1s infinite}@keyframes mg{0%,100%{box-shadow:0 0 5px #00ff88}50%{box-shadow:0 0 15px #00ff88}}
+.sim-cell{font-weight:bold}.regras-ref{font-size:.6em;color:#444;margin-top:8px;line-height:1.8}.regras-ref b{color:#555}
+.log-box{background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:10px;max-height:150px;overflow-y:auto;font-size:.75em;line-height:1.5;margin-top:10px}.log-entry{padding:2px 0;border-bottom:1px solid #1a1a1a;color:#888}.log-match{color:#00ff88;font-weight:bold}
+.debug-info{font-size:.7em;color:#666;margin-top:5px;padding:4px 8px;background:#111;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>⌘ Gerador π</h1>
+<div class="painel painel-destaque">
+<h2>⚡ Gerador <span class="loading-indicator" id="loading"></span></h2>
+<div class="grid-inputs">
+<div class="campo"><label>Seed</label><input type="text" id="seed" value=""></div>
+<div class="campo"><label>Comprimento</label><input type="number" id="comprimento" value="1000" min="1"></div>
+<div class="campo"><label>Caos (-100 a 100)</label><input type="number" id="multiplicador" value="0"></div>
+<div class="campo"><label>Frequência</label><input type="number" id="frequencia" value="0"></div>
+<div class="campo campo-wide"><label>Ordem (ex: 35-51-a)</label><input type="text" id="ordem" value="0"></div>
+</div>
+<div class="regras-ref"><b>Caos:</b> -100=rigido 0=normal 100=caos | <b>Ordem:</b> estrutura-regras-filtro</div>
+<div class="resultado-box" id="resultado"><span style="color:#555">Aguardando...</span></div>
+<div class="info-bar"><div>Palavras: <span id="total-palavras">0</span></div><div>Score: <span id="total-score" style="color:#ffff00">0</span></div></div>
+<div class="palavras-lista" id="palavras-lista"></div>
+</div>
+<hr class="separador">
+<div class="tabs">
+<div class="tab tab-chars active" onclick="trocarAba('chars')">🟢 Caracteres</div>
+<div class="tab tab-freq" onclick="trocarAba('freq')">🔶 Frequência</div>
+<div class="tab tab-hibrido" onclick="trocarAba('hibrido')">🟣 Híbrida</div>
+<div class="tab tab-seed" onclick="trocarAba('seed-search')">🔵 Seed</div>
+</div>
+
+<div class="tab-content active" id="tab-chars">
+<div class="painel painel-chars">
+<h3>🟢 Busca por Caracteres</h3>
+<div class="grid-inputs">
+<div class="campo campo-wide"><label>Texto Alvo</label><input type="text" id="chars-alvo" value="" placeholder="Ola Mundo"></div>
+<div class="campo"><label>Comprimento</label><input type="number" id="chars-comprimento" value="1000"></div>
+<div class="campo"><label>Caos</label><input type="number" id="chars-multiplicador" value="0"></div>
+<div class="campo"><label>Seed Min</label><input type="number" id="chars-seed-min" value="1"></div>
+<div class="campo"><label>Seed Max</label><input type="number" id="chars-seed-max" value="16"></div>
+<div class="campo"><label>Freq Min</label><input type="number" id="chars-freq-min" value="0"></div>
+<div class="campo"><label>Freq Max</label><input type="number" id="chars-freq-max" value="100000"></div>
+<div class="campo"><label>Threads</label><input type="number" id="chars-threads" value="2" min="1" max="8"></div>
+</div>
+<div class="btn-group"><button class="btn-chars" onclick="iniciarBuscaChars()">▶ Buscar</button><button class="btn-parar" onclick="pararBuscaChars()">⏹ Parar</button></div>
+<div class="stats-row">
+<div class="stat-item"><span class="status-indicator status-inativo" id="status-chars"></span></div>
+<div class="stat-item"><span class="stat-value" id="chars-testadas">0</span><span class="stat-label">Testadas</span></div>
+<div class="stat-item"><span class="stat-value" id="chars-melhor-score" style="color:#ffff00">0</span><span class="stat-label">Melhor</span></div>
+</div>
+<table><thead><tr><th>#</th><th>Score</th><th>Seed</th><th>Len</th><th>Freq</th><th>Cob.</th><th>Ordem</th><th>Resultado</th><th>Sim.</th><th>✓</th></tr></thead><tbody id="tbody-chars"></tbody></table>
+</div>
+<div class="painel painel-filtro">
+<h3>🔄 Busca por Filtro</h3>
+<p style="color:#666;font-size:.85em;margin-bottom:10px">Pega o #1 com 100% e percorre filtros buscando match.</p>
+<div class="btn-group"><button class="btn-filtro" onclick="iniciarBuscaFiltro()">🔄 Buscar Match</button><button class="btn-parar" onclick="pararBuscaFiltro()">⏹ Parar</button></div>
+<div class="debug-info" id="filtro-debug"></div>
+<div class="stats-row">
+<div class="stat-item"><span class="status-indicator status-inativo" id="status-filtro"></span></div>
+<div class="stat-item"><span class="stat-value" id="filtro-atual" style="color:#ffff00">0</span><span class="stat-label">Filtro</span></div>
+<div class="stat-item"><span class="stat-value" id="filtro-testados">0</span><span class="stat-label">Testados</span></div>
+<div class="stat-item"><span class="stat-value" id="filtro-melhor-sim" style="color:#ff9900">0%</span><span class="stat-label">Melhor</span></div>
+<div class="stat-item"><span class="stat-value" id="filtro-matches" style="color:#00ff88">0</span><span class="stat-label">Matches</span></div>
+</div>
+<div id="filtro-matches-container"></div>
+<table><thead><tr><th>#</th><th>Sim.</th><th>Seed</th><th>Freq</th><th>Ordem</th><th>Resultado</th><th>✓</th></tr></thead><tbody id="tbody-filtro"></tbody></table>
+<div class="log-box" id="filtro-log"><span style="color:#555">Aguardando...</span></div>
+</div>
+</div>
+
+<div class="tab-content" id="tab-freq"><div class="painel painel-freq"><h3>🔶 Frequência</h3>
+<div class="grid-inputs">
+<div class="campo"><label>Seed</label><input type="text" id="freq-seed" value=""></div>
+<div class="campo"><label>Comprimento</label><input type="number" id="freq-comprimento" value="1000"></div>
+<div class="campo"><label>Caos</label><input type="number" id="freq-multiplicador" value="0"></div>
+<div class="campo"><label>Freq Min</label><input type="number" id="freq-min" value="0"></div>
+<div class="campo"><label>Freq Max</label><input type="number" id="freq-max" value="100000"></div>
+<div class="campo"><label>Threads</label><input type="number" id="freq-threads" value="2" min="1" max="8"></div>
+</div>
+<div class="btn-group"><button class="btn-freq" onclick="iniciarBuscaFreq()">▶</button><button class="btn-parar" onclick="pararBuscaFreq()">⏹</button></div>
+<div class="stats-row"><div class="stat-item"><span class="status-indicator status-inativo" id="status-freq"></span></div><div class="stat-item"><span class="stat-value" id="freq-testadas">0</span><span class="stat-label">Testadas</span></div><div class="stat-item"><span class="stat-value" id="freq-melhor-score" style="color:#ffff00">0</span><span class="stat-label">Melhor</span></div></div>
+<table><thead><tr><th>#</th><th>Score</th><th>Pos</th><th>Freq</th><th>Qtd</th><th>Texto</th></tr></thead><tbody id="tbody-freq"></tbody></table>
+</div></div>
+
+<div class="tab-content" id="tab-hibrido"><div class="painel painel-hibrido"><h3>🟣 Híbrida</h3>
+<div class="grid-inputs">
+<div class="campo"><label>Comprimento</label><input type="number" id="hib-comprimento" value="1000"></div>
+<div class="campo"><label>Caos</label><input type="number" id="hib-multiplicador" value="0"></div>
+<div class="campo"><label>Seed Min</label><input type="number" id="hib-seed-min" value="1"></div>
+<div class="campo"><label>Seed Max</label><input type="number" id="hib-seed-max" value="32"></div>
+<div class="campo"><label>Freq Min</label><input type="number" id="hib-freq-min" value="0"></div>
+<div class="campo"><label>Freq Max</label><input type="number" id="hib-freq-max" value="100000"></div>
+<div class="campo"><label>Threads</label><input type="number" id="hib-threads" value="2" min="1" max="8"></div>
+</div>
+<div class="btn-group"><button class="btn-hibrido" onclick="iniciarBuscaHibrida()">▶</button><button class="btn-parar" onclick="pararBuscaHibrida()">⏹</button></div>
+<div class="stats-row"><div class="stat-item"><span class="status-indicator status-inativo" id="status-hibrido"></span></div><div class="stat-item"><span class="stat-value" id="hib-testadas">0</span><span class="stat-label">Testadas</span></div><div class="stat-item"><span class="stat-value" id="hib-melhor-score" style="color:#ffff00">0</span><span class="stat-label">Melhor</span></div></div>
+<table><thead><tr><th>#</th><th>Score</th><th>Pos</th><th>Seed</th><th>Freq</th><th>Qtd</th><th>Texto</th></tr></thead><tbody id="tbody-hibrido"></tbody></table>
+</div></div>
+
+<div class="tab-content" id="tab-seed-search"><div class="painel painel-seed"><h3>🔵 Seed</h3>
+<div class="grid-inputs">
+<div class="campo"><label>Comprimento</label><input type="number" id="seed-comprimento" value="1000"></div>
+<div class="campo"><label>Caos</label><input type="number" id="seed-multiplicador" value="0"></div>
+<div class="campo"><label>Freq</label><input type="number" id="seed-frequencia" value="0"></div>
+<div class="campo"><label>Seed Min</label><input type="number" id="seed-min-len" value="1"></div>
+<div class="campo"><label>Seed Max</label><input type="number" id="seed-max-len" value="32"></div>
+<div class="campo"><label>Threads</label><input type="number" id="seed-threads" value="2" min="1" max="8"></div>
+</div>
+<div class="btn-group"><button class="btn-buscar" onclick="iniciarBuscaSeed()">▶</button><button class="btn-parar" onclick="pararBuscaSeed()">⏹</button></div>
+<div class="stats-row"><div class="stat-item"><span class="status-indicator status-inativo" id="status-seed"></span></div><div class="stat-item"><span class="stat-value" id="seed-testadas">0</span><span class="stat-label">Testadas</span></div><div class="stat-item"><span class="stat-value" id="seed-melhor-score" style="color:#ffff00">0</span><span class="stat-label">Melhor</span></div></div>
+<table><thead><tr><th>#</th><th>Score</th><th>Pos</th><th>Seed</th><th>Len</th><th>Qtd</th><th>Texto</th></tr></thead><tbody id="tbody-seed"></tbody></table>
+</div></div>
+</div>
+
+<script>
+let dt=null;
+function deb(){clearTimeout(dt);document.getElementById('loading').classList.add('visible');dt=setTimeout(gerarTexto,300)}
+document.addEventListener('DOMContentLoaded',()=>{['seed','comprimento','multiplicador','frequencia','ordem'].forEach(id=>document.getElementById(id).addEventListener('input',deb));gerarTexto()});
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function posClass(p,c){const r=p/c;return r<.05?'pos-hot':r<.15?'pos-warm':r<.4?'pos-cool':'pos-far'}
+function medalha(i){return i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)}
+function renderPalavras(i){if(!i||!i.length)return'';return i.map(p=>`<span class="tag">${esc(p.palavra)}@${p.posicao}</span>`).join(' ')}
+function miniBar(p,c){return`<span class="mini-bar-bg"><span class="mini-bar-fill ${c}" style="width:${Math.min(100,p)}%"></span></span>${p}%`}
+function preencherGerador(s,c,m,f,o){document.getElementById('seed').value=s;document.getElementById('comprimento').value=c;document.getElementById('multiplicador').value=m;document.getElementById('frequencia').value=f;if(o!==undefined&&o!=='')document.getElementById('ordem').value=o;gerarTexto();window.scrollTo({top:0,behavior:'smooth'})}
+
+async function gerarTexto(){try{const r=await fetch('/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seed:document.getElementById('seed').value,comprimento:document.getElementById('comprimento').value,multiplicador:document.getElementById('multiplicador').value,frequencia:document.getElementById('frequencia').value,ordem:document.getElementById('ordem').value})});const d=await r.json();document.getElementById('resultado').textContent=d.resultado;document.getElementById('total-palavras').textContent=d.total_palavras;document.getElementById('total-score').textContent=(d.score||0).toFixed(2);document.getElementById('palavras-lista').innerHTML=d.palavras_info?renderPalavras(d.palavras_info):''}catch(e){console.error(e)}document.getElementById('loading').classList.remove('visible')}
+
+function trocarAba(n){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));const tm={'chars':'.tab-chars','freq':'.tab-freq','hibrido':'.tab-hibrido','seed-search':'.tab-seed'};const cm={'chars':'tab-chars','freq':'tab-freq','hibrido':'tab-hibrido','seed-search':'tab-seed-search'};document.querySelector(tm[n]).classList.add('active');document.getElementById(cm[n]).classList.add('active')}
+
+let ultimosDadosChars=[];
+
+// CHARS
+let charsTimer=null;
+async function iniciarBuscaChars(){
+    await fetch('/start_search_chars',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({texto_alvo:document.getElementById('chars-alvo').value,comprimento:document.getElementById('chars-comprimento').value,multiplicador:document.getElementById('chars-multiplicador').value,seed_min:document.getElementById('chars-seed-min').value,seed_max:document.getElementById('chars-seed-max').value,freq_min:document.getElementById('chars-freq-min').value,freq_max:document.getElementById('chars-freq-max').value,threads:document.getElementById('chars-threads').value})});
+    document.getElementById('status-chars').className='status-indicator status-ativo';
+    if(charsTimer)clearInterval(charsTimer);
+    charsTimer=setInterval(async()=>{try{const r=await fetch('/search_status_chars');const d=await r.json();document.getElementById('chars-testadas').textContent=(d.testadas||0).toLocaleString();document.getElementById('chars-melhor-score').textContent=(d.melhor_score||0).toFixed(1);ultimosDadosChars=d.melhores||[];const tb=document.getElementById('tbody-chars');tb.innerHTML='';const comp=document.getElementById('chars-comprimento').value;const mult=document.getElementById('chars-multiplicador').value;(d.melhores||[]).forEach((it,idx)=>{const tr=document.createElement('tr');const hc=it.ordem_code&&it.ordem_code.length>0;tr.innerHTML=`<td>${medalha(idx)}</td><td class="score-cell"><span class="score-highlight">${(it.score||0).toFixed(1)}</span></td><td class="seed-cell" title="${esc(it.seed)}">${esc(it.seed)}</td><td class="seedlen-cell">${it.tamanho_seed||0}</td><td class="freq-cell">${it.frequencia}</td><td class="cobertura-cell">${miniBar(it.cobertura||0,'fill-green')}</td><td>${hc?`<span class="ordem-code">${esc(it.ordem_code)}</span>`:'—'}</td><td style="color:#00ff88">${it.ordem_result?esc(it.ordem_result):'—'}</td><td style="color:${(it.similaridade||0)>50?'#00ff88':'#ff9900'}">${it.similaridade||0}%</td><td>${it.ordem_match?'<span class="match-badge">✓</span>':'—'}</td>`;tr.style.cursor='pointer';tr.addEventListener('click',()=>preencherGerador(it.seed,comp,mult,it.frequencia,hc?it.ordem_code:'0'));tb.appendChild(tr)});if(!d.busca_ativa){clearInterval(charsTimer);document.getElementById('status-chars').className='status-indicator status-inativo'}}catch(e){console.error(e)}},800);
+}
+async function pararBuscaChars(){await fetch('/stop_search_chars',{method:'POST'});document.getElementById('status-chars').className='status-indicator status-inativo';if(charsTimer)clearInterval(charsTimer)}
+
+// FILTRO
+// FILTRO - VERSÃO DEBUG
+let filtroTimer = null;
+
+async function iniciarBuscaFiltro() {
+    console.log('=== FILTRO INICIO ===');
+    
+    const c100 = ultimosDadosChars.filter(c => {
+        const cob = parseFloat(c.cobertura || 0);
+        console.log('  cand cobertura:', cob);
+        return cob >= 99.9;
+    });
+    
+    console.log('Total chars:', ultimosDadosChars.length, 'Com 100%:', c100.length);
+    
+    const dbg = document.getElementById('filtro-debug');
+    dbg.textContent = 'Total:' + ultimosDadosChars.length + ' 100%:' + c100.length;
+    
+    if (!c100.length) {
+        alert('Nenhum com 100%');
+        return;
+    }
+    
+    const alvo = document.getElementById('chars-alvo').value;
+    console.log('Alvo:', alvo);
+    
+    if (!alvo) {
+        alert('Preencha texto alvo');
+        return;
+    }
+    
+    const payload = {
+        candidatos: c100,
+        texto_alvo: alvo,
+        comprimento: document.getElementById('chars-comprimento').value,
+        multiplicador: document.getElementById('chars-multiplicador').value
+    };
+    
+    console.log('Enviando payload:', JSON.stringify(payload).substring(0, 200));
+    
+    try {
+        const resp = await fetch('/start_search_filtro', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        console.log('Response status:', resp.status);
+        const d = await resp.json();
+        console.log('Response body:', d);
+        
+        if (d.status === 'error') {
+            alert(d.msg);
+            dbg.textContent += ' | ERRO: ' + d.msg;
+            return;
+        }
+        
+        dbg.textContent += ' | OK seed=' + d.seed + ' freq=' + d.freq;
+        document.getElementById('status-filtro').className = 'status-indicator status-ativo';
+        
+        // limpar timer anterior
+        if (filtroTimer) {
+            clearInterval(filtroTimer);
+            filtroTimer = null;
+        }
+        
+        // iniciar polling
+        console.log('Iniciando polling...');
+        filtroTimer = setInterval(function() {
+            console.log('polling tick');
+            atualizarFiltro();
+        }, 1000);
+        
+        // primeira chamada imediata
+        atualizarFiltro();
+        
+    } catch(e) {
+        console.error('FETCH ERROR:', e);
+        dbg.textContent += ' | FETCH ERR: ' + e.message;
+    }
+}
+
+async function atualizarFiltro() {
+    console.log('atualizarFiltro chamada');
+    try {
+        const r = await fetch('/search_status_filtro');
+        console.log('fetch ok, status:', r.status);
+        const texto = await r.text();
+        console.log('response text:', texto.substring(0, 200));
+        const d = JSON.parse(texto);
+        console.log('parsed ok, busca_ativa:', d.busca_ativa, 'filtro:', d.filtro_atual, 'testados:', d.filtros_testados, 'melhor:', d.melhor_sim);
+
+        document.getElementById('filtro-atual').textContent = (d.filtro_atual || 0).toLocaleString();
+        document.getElementById('filtro-testados').textContent = (d.filtros_testados || 0).toLocaleString();
+        document.getElementById('filtro-melhor-sim').textContent = (d.melhor_sim || 0) + '%';
+        document.getElementById('filtro-matches').textContent = (d.matches || []).length;
+
+        var mc = document.getElementById('filtro-matches-container');
+        if (d.matches && d.matches.length) {
+            mc.innerHTML = d.matches.map(function(m) {
+                return '<div style="margin:10px 0;padding:15px;background:#001a00;border:2px solid #00ff88;border-radius:8px">' +
+                    '<span class="match-badge">MATCH</span>' +
+                    '<div style="margin-top:10px">' +
+                    '<div>Seed: <b style="color:#ff9900">' + esc(m.seed) + '</b></div>' +
+                    '<div>Freq: <b style="color:#ff00ff">' + m.frequencia + '</b></div>' +
+                    '<div>Ordem: <span class="ordem-code">' + esc(m.ordem_code) + '</span></div>' +
+                    '<div style="color:#00ff88;font-size:1.1em">' + esc(m.resultado) + '</div>' +
+                    '</div></div>';
+            }).join('');
+        } else {
+            mc.innerHTML = '';
+        }
+
+        var tb = document.getElementById('tbody-filtro');
+        tb.innerHTML = '';
+        (d.resultados || []).forEach(function(it, idx) {
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td>' + medalha(idx) + '</td>' +
+                '<td style="color:#ff9900">' + (it.similaridade || 0) + '%</td>' +
+                '<td class="seed-cell">' + esc(it.seed) + '</td>' +
+                '<td class="freq-cell">' + it.frequencia + '</td>' +
+                '<td><span class="ordem-code">' + esc(it.ordem_code) + '</span></td>' +
+                '<td style="color:#00ff88">' + esc(it.resultado || '') + '</td>' +
+                '<td>' + (it.match ? 'SIM' : '') + '</td>';
+            tb.appendChild(tr);
+        });
+
+        var lb = document.getElementById('filtro-log');
+        if (d.log && d.log.length) {
+            lb.innerHTML = d.log.slice().reverse().map(function(l) {
+                return '<div class="log-entry">' + esc(l) + '</div>';
+            }).join('');
+        }
+
+        if (!d.busca_ativa) {
+            console.log('filtro parou');
+            clearInterval(filtroTimer);
+            filtroTimer = null;
+            document.getElementById('status-filtro').className = 'status-indicator status-inativo';
+        }
+    } catch(e) {
+        console.error('ATUALIZAR FILTRO ERRO:', e.message, e.stack);
+    }
+}
+
+async function pararBuscaFiltro() {
+    await fetch('/stop_search_filtro', { method: 'POST' });
+    document.getElementById('status-filtro').className = 'status-indicator status-inativo';
+    if (filtroTimer) {
+        clearInterval(filtroTimer);
+        filtroTimer = null;
+    }
+}
+// FREQ
+let freqTimer=null;
+async function iniciarBuscaFreq(){await fetch('/start_search_freq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seed:document.getElementById('freq-seed').value,comprimento:document.getElementById('freq-comprimento').value,multiplicador:document.getElementById('freq-multiplicador').value,freq_min:document.getElementById('freq-min').value,freq_max:document.getElementById('freq-max').value,threads:document.getElementById('freq-threads').value})});document.getElementById('status-freq').className='status-indicator status-ativo';if(freqTimer)clearInterval(freqTimer);freqTimer=setInterval(async()=>{try{const r=await fetch('/search_status_freq');const d=await r.json();document.getElementById('freq-testadas').textContent=(d.testadas||0).toLocaleString();document.getElementById('freq-melhor-score').textContent=(d.melhor_score||0).toFixed(2);const tb=document.getElementById('tbody-freq');tb.innerHTML='';const comp=parseInt(document.getElementById('freq-comprimento').value)||1000;(d.melhores||[]).forEach((it,idx)=>{const pC=it.pos_primeira<999999?posClass(it.pos_primeira,comp):'pos-far';const tr=document.createElement('tr');tr.innerHTML=`<td>${medalha(idx)}</td><td class="score-cell">${(it.score||0).toFixed(2)}</td><td class="${pC}">${it.pos_primeira<999999?it.pos_primeira:'∞'}</td><td class="freq-cell">${it.frequencia}</td><td>${it.qtd_palavras||0}</td><td class="texto-cell">${esc((it.texto||'').substring(0,60))}</td>`;tr.style.cursor='pointer';tr.addEventListener('click',()=>preencherGerador(it.seed||'',comp,0,it.frequencia,'0'));tb.appendChild(tr)});if(!d.busca_ativa){clearInterval(freqTimer);document.getElementById('status-freq').className='status-indicator status-inativo'}}catch(e){console.error(e)}},800)}
+async function pararBuscaFreq(){await fetch('/stop_search_freq',{method:'POST'});document.getElementById('status-freq').className='status-indicator status-inativo';if(freqTimer)clearInterval(freqTimer)}
+
+// HÍBRIDA
+let hibTimer=null;
+async function iniciarBuscaHibrida(){await fetch('/start_search_hybrid',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comprimento:document.getElementById('hib-comprimento').value,multiplicador:document.getElementById('hib-multiplicador').value,seed_min:document.getElementById('hib-seed-min').value,seed_max:document.getElementById('hib-seed-max').value,freq_min:document.getElementById('hib-freq-min').value,freq_max:document.getElementById('hib-freq-max').value,threads:document.getElementById('hib-threads').value})});document.getElementById('status-hibrido').className='status-indicator status-ativo';if(hibTimer)clearInterval(hibTimer);hibTimer=setInterval(async()=>{try{const r=await fetch('/search_status_hybrid');const d=await r.json();document.getElementById('hib-testadas').textContent=(d.testadas||0).toLocaleString();document.getElementById('hib-melhor-score').textContent=(d.melhor_score||0).toFixed(2);const tb=document.getElementById('tbody-hibrido');tb.innerHTML='';const comp=parseInt(document.getElementById('hib-comprimento').value)||1000;(d.melhores||[]).forEach((it,idx)=>{const pC=it.pos_primeira<999999?posClass(it.pos_primeira,comp):'pos-far';const tr=document.createElement('tr');tr.innerHTML=`<td>${medalha(idx)}</td><td class="score-cell">${(it.score||0).toFixed(2)}</td><td class="${pC}">${it.pos_primeira<999999?it.pos_primeira:'∞'}</td><td class="seed-cell" title="${esc(it.seed)}">${esc(it.seed)}</td><td class="freq-cell">${it.frequencia}</td><td>${it.qtd_palavras||0}</td><td class="texto-cell">${esc((it.texto||'').substring(0,60))}</td>`;tr.style.cursor='pointer';tr.addEventListener('click',()=>preencherGerador(it.seed,comp,0,it.frequencia,'0'));tb.appendChild(tr)});if(!d.busca_ativa){clearInterval(hibTimer);document.getElementById('status-hibrido').className='status-indicator status-inativo'}}catch(e){console.error(e)}},800)}
+async function pararBuscaHibrida(){await fetch('/stop_search_hybrid',{method:'POST'});document.getElementById('status-hibrido').className='status-indicator status-inativo';if(hibTimer)clearInterval(hibTimer)}
+
+// SEED
+let seedTimer=null;
+async function iniciarBuscaSeed(){await fetch('/start_search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comprimento:document.getElementById('seed-comprimento').value,multiplicador:document.getElementById('seed-multiplicador').value,frequencia:document.getElementById('seed-frequencia').value,min_len:document.getElementById('seed-min-len').value,max_len:document.getElementById('seed-max-len').value,threads:document.getElementById('seed-threads').value})});document.getElementById('status-seed').className='status-indicator status-ativo';if(seedTimer)clearInterval(seedTimer);seedTimer=setInterval(async()=>{try{const r=await fetch('/search_status');const d=await r.json();document.getElementById('seed-testadas').textContent=(d.testadas||0).toLocaleString();document.getElementById('seed-melhor-score').textContent=(d.melhor_score||0).toFixed(2);const tb=document.getElementById('tbody-seed');tb.innerHTML='';const comp=parseInt(document.getElementById('seed-comprimento').value)||1000;(d.melhores||d.melhores_seeds||[]).forEach((it,idx)=>{const pC=it.pos_primeira<999999?posClass(it.pos_primeira,comp):'pos-far';const tr=document.createElement('tr');tr.innerHTML=`<td>${medalha(idx)}</td><td class="score-cell">${(it.score||0).toFixed(2)}</td><td class="${pC}">${it.pos_primeira<999999?it.pos_primeira:'∞'}</td><td class="seed-cell" title="${esc(it.seed)}">${esc(it.seed)}</td><td class="seedlen-cell">${it.tamanho_seed||0}</td><td>${it.qtd_palavras||0}</td><td class="texto-cell">${esc((it.texto||'').substring(0,60))}</td>`;tr.style.cursor='pointer';tr.addEventListener('click',()=>preencherGerador(it.seed,comp,0,it.frequencia,'0'));tb.appendChild(tr)});if(!d.busca_ativa){clearInterval(seedTimer);document.getElementById('status-seed').className='status-indicator status-inativo'}}catch(e){console.error(e)}},800)}
+async function pararBuscaSeed(){await fetch('/stop_search',{method:'POST'});document.getElementById('status-seed').className='status-indicator status-inativo';if(seedTimer)clearInterval(seedTimer)}
+</script>
+</body>
+</html>
